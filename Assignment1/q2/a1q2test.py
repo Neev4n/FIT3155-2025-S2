@@ -33,20 +33,19 @@ def z_algorithm(text: str):
 
     return Z
 
-def create_good_suffix_table(pattern: str) -> list[int]:
+def create_good_prefix_table(pattern: str) -> list[int]:
 
     m = len(pattern)
 
-    Z = z_algorithm(pattern[::-1])
-    Z.reverse()
-    good_suffix_table = [-1] * (len(pattern) + 1)
+    Z = z_algorithm(pattern)
 
-    for i in range(len(pattern)):
-        j =  m - Z[i]
-        good_suffix_table[j] = i
+    good_prefix_table = [0] * (len(pattern) + 1)
 
-    good_suffix_table[-1] -= 1
-    return good_suffix_table
+    for i in range(len(pattern)-1, -1, -1):
+        j =  Z[i] - 1
+        good_prefix_table[j] = i
+
+    return good_prefix_table
 
 def create_matched_prefix_table(pattern: str)-> list[int]:
 
@@ -87,36 +86,36 @@ def boyer_moore_algorithm(text: str, pattern: str):
     k = t - p
     res = []
 
-    #good_suffix_table = create_good_suffix_table(pattern)
+    good_prefix_table = create_good_prefix_table(pattern)
     #matched_prefix_table = create_matched_prefix_table(pattern)
 
     #print_arr(good_suffix_table, "good suffix table:")
     #print_arr(matched_prefix_table, "matched prefix table:")
 
 
-    while k > 0:
+    while k >= 0:
         k1 = 0
         t1 = text[k + k1]
         p1 = pattern[k1]
 
         while k1 < p and text[k+k1] == pattern[k1]:
-            t1 = text[k + k1]
-            p1 = pattern[p - 1 - k1]
+
 
             k1 += 1
 
         if k1 == p:
-            res.append(k-k1+1)
+            res.append(k)
+
 
 
         bad_char_val = bad_char_table[k1][ord(text[k+k1]) - ord('a')]
-        bad_char_shift = p if bad_char_val == -1 else max(1, k1 + bad_char_val)
+        bad_char_shift = p if bad_char_val == -1 else max(1, bad_char_val - k1)
 
-        #good_suffix_val = good_suffix_table[p - k1 - 1]
-        #good_shift = matched_prefix_table[p - k1 - 1]+1 if good_suffix_val == -1 else good_suffix_val
+        good_prefix_val = good_prefix_table[k1-1]
+        #good_shift = matched_prefix_table[p - k1 - 1]+1 if good_prefix_val == -1 else good_suffix_val
 
-        #k = k + max(good_shift, bad_char_shift)
-        k = k - bad_char_shift
+        k = k - max(good_prefix_val, bad_char_shift)
+
 
     return res
 
@@ -134,8 +133,8 @@ def print_arr(arr: list[int], desc: str):
     print(index_str)
 
 
-txt = "abbdbbabdabcdb"
-pat = "bdc"
+txt = "abaababbc"
+pat = "abaaba"
 print_text_and_indices(pat)
 
 print(boyer_moore_algorithm(txt, pat))
