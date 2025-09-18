@@ -35,8 +35,6 @@ def z_algorithm(text: str):
 
 def create_good_prefix_table(pattern: str) -> list[int]:
 
-    m = len(pattern)
-
     Z = z_algorithm(pattern)
 
     good_prefix_table = [0] * (len(pattern) + 1)
@@ -47,27 +45,31 @@ def create_good_prefix_table(pattern: str) -> list[int]:
 
     return good_prefix_table
 
-def create_matched_prefix_table(pattern: str)-> list[int]:
+def create_matched_suffix_table(pattern: str)-> list[int]:
+
+    if not len(pattern):
+        return []
 
     m = len(pattern)
 
-    table = [0] * (m+1)
+    Z = z_algorithm(pattern[::-1])
+    Z.reverse()
+    table = [0] * m
+    table[0] = Z[0]
 
-    Z = z_algorithm(pattern)
-
-    for i in range(m-1, -1, -1):
-        if Z[i] + i == m:
+    for i in range(1,m):
+        if Z[i]  == i + 1:
             table[i] = Z[i]
         else:
-            table[i] = table[i+1]
+            table[i] = table[i-1]
 
-    table[0] = m - 1
+    table[-1] = m - 1
     return table
 
 def create_bad_character_table(pattern: str) -> list[list[int]]:
 
     p = len(pattern)
-    arr = [[-1] * 26] * p
+    arr = [[-1] * 26] * (p+1)
     temp = [-1] * 26
 
     for i in range(len(pattern)-1,-1,-1):
@@ -78,6 +80,9 @@ def create_bad_character_table(pattern: str) -> list[list[int]]:
 
 def boyer_moore_algorithm(text: str, pattern: str):
 
+    if not len(pattern) or not len(text):
+        return []
+
     bad_char_table = create_bad_character_table(pattern)
 
 
@@ -87,34 +92,34 @@ def boyer_moore_algorithm(text: str, pattern: str):
     res = []
 
     good_prefix_table = create_good_prefix_table(pattern)
-    #matched_prefix_table = create_matched_prefix_table(pattern)
+    matched_suffix_table = create_matched_suffix_table(pattern)
 
-    #print_arr(good_suffix_table, "good suffix table:")
-    #print_arr(matched_prefix_table, "matched prefix table:")
+    print_text_and_indices(text)
+    print_text_and_indices(pattern)
+    print_arr(good_prefix_table, "good suffix table:")
+    print_arr(matched_suffix_table, "matched prefix table:")
 
 
     while k >= 0:
         k1 = 0
-        t1 = text[k + k1]
-        p1 = pattern[k1]
 
         while k1 < p and text[k+k1] == pattern[k1]:
-
 
             k1 += 1
 
         if k1 == p:
             res.append(k)
-
-
+            good_shift = p - matched_suffix_table[k1 - 1]
+            k = k - good_shift
+            continue
 
         bad_char_val = bad_char_table[k1][ord(text[k+k1]) - ord('a')]
         bad_char_shift = p if bad_char_val == -1 else max(1, bad_char_val - k1)
 
         good_prefix_val = good_prefix_table[k1-1]
-        #good_shift = matched_prefix_table[p - k1 - 1]+1 if good_prefix_val == -1 else good_suffix_val
+        good_shift = p - matched_suffix_table[k1-1] if good_prefix_val == 0 else good_prefix_val
 
-        k = k - max(good_prefix_val, bad_char_shift)
+        k = k - max(good_shift, bad_char_shift)
 
 
     return res
@@ -133,10 +138,41 @@ def print_arr(arr: list[int], desc: str):
     print(index_str)
 
 
-txt = "abaababbc"
-pat = "abaaba"
-print_text_and_indices(pat)
+# txt = "aacababacabbcaacababacabbcabcabcabcabcacababbabb"
+# pat = "acababacab"
+# print_text_and_indices(pat)
+#
+# print(boyer_moore_algorithm(txt, pat))
 
-print(boyer_moore_algorithm(txt, pat))
+def run_tests():
+    cases = [
+        ("abcde", "bcd", [1]),
+        ("abababab", "ab", [0,2,4,6]),
+        ("aaaaa", "aaa", [0,1,2]),
+        ("abcdef", "gh", []),
+        ("abcdef", "", []),
+        ("", "abc", []),
+        ("abc", "abcd", []),
+        ("abcde", "abcde", [0]),
+        ("aaaaaaaaaa", "aa", [0,1,2,3,4,5,6,7,8]),
+        ("aaaaab", "aaab", [2]),
+        #("abc$%abc$%abc", "$%", [3,8]),
+        ("a"*10000, "b", []),
+        ("abc"*1000, "abc", list(range(0,3000,3))),
+        ("xxxxxxabcdef", "abcdef", [6]),
+        ("abcdefxxxxx", "abc", [0]),
+        ("abcdabcd", "cdab", [2]),
+    ]
+
+    for text, pat, expected in cases:
+        result = boyer_moore_algorithm(text, pat)
+        result.sort()
+        assert result == expected, f"FAILED: {text}, {pat}, got {result}, expected {expected}"
+    print("All test cases passed!")
+
+run_tests()
+
+
+# print(create_matched_suffix_table(pat))
 
 # print(boyer_moore_algorithm(txt, pat))
