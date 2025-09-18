@@ -31,23 +31,25 @@ def get_rank_table(input_text: str):
 
     return table
 
+def get_character_idx(char: str):
+    char_idx = ord(char) - ord('a')
+
+    return char_idx if char != "$" else -1
 
 def get_count_table(input_text: str):
 
     n = len(input_text)
     arr = [None] * n
-    temp = [-1] * 27
+    temp = [0] * 27
 
     for i in range(len(input_text)):
 
-        char_idx = ord(input_text[i]) - ord('a')
-
-        if input_text[i] != '$':
-            temp[char_idx] = temp[char_idx] + 1
-            temp[-1] = 0
-            arr[i] = temp[:]
+        char_idx = get_character_idx(input_text[i])
+        temp[char_idx] = temp[char_idx] + 1
+        arr[i] = temp[:]
 
     return arr
+
 def inverse_bwt(bwt_text : str, suffix_array: list[int]):
 
     first = sorted(bwt_text)
@@ -66,11 +68,40 @@ def inverse_bwt(bwt_text : str, suffix_array: list[int]):
 
     return res[::-1]
 
+def search_for_pattern(bwt_text : str, suffix_array: list[int], pattern: str):
 
+    n = len(bwt_text)
+
+    sp = 1
+    ep = n-1
+
+    first = sorted(bwt_text)
+    rank_table = get_rank_table(''.join(first))
+    k = len(pattern) - 1
+
+    count_table = get_count_table(bwt_text)
+
+    while k >= 0 and sp <= ep:
+
+        char = pattern[k]
+        char_idx = get_character_idx(char)
+        sp = rank_table[char_idx] + count_table[sp - 1][char_idx]
+        ep = rank_table[char_idx] + count_table[ep][char_idx] - 1
+
+        if sp > ep:
+            return []
+
+
+        k -= 1
+
+    return suffix_array[sp:ep+1]
 
 text = "googol$"
+pattern = "gogo"
 suffix_array = compute_suffix_array(text, len(text))
 bwt_text = ''.join(get_last_character(suffix_array,text))
 
 
-print(inverse_bwt(bwt_text, suffix_array))
+# print(inverse_bwt(bwt_text, suffix_array))
+
+print(search_for_pattern(bwt_text, suffix_array, pattern))
