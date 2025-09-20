@@ -39,7 +39,7 @@ def get_character_idx(char: str):
 def get_count_table(input_text: str):
 
     n = len(input_text)
-    arr = [None] * n
+    arr = [None] * (n + 1)
     temp = [0] * 27
 
     for i in range(len(input_text)):
@@ -48,31 +48,15 @@ def get_count_table(input_text: str):
         temp[char_idx] = temp[char_idx] + 1
         arr[i] = temp[:]
 
+    arr[-1] = [0] * 27
+
     return arr
-
-def inverse_bwt(bwt_text : str, suffix_array: list[int]):
-
-    first = sorted(bwt_text)
-    rank_table = get_rank_table(''.join(first))
-    pos = 0
-    res = "$" + bwt_text[pos]
-
-    count_table = get_count_table(bwt_text)
-
-    while len(res) < len(bwt_text):
-        char = res[-1]
-        num_occ = count_table[pos][ord(char) - ord('a')]
-        pos = rank_table[ord(char) - ord('a')] + num_occ
-        add = bwt_text[pos]
-        res += add
-
-    return res[::-1]
 
 def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern: str):
 
     n = len(bwt_text)
 
-    sp = 1
+    sp = 0
     ep = n-1
 
     first = sorted(bwt_text)
@@ -85,6 +69,7 @@ def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern:
     ret = []
 
     def search_for_pattern_aux(k: int, sp: int, ep: int, temp_char = ""):
+
         stop_add = False
 
         while k >= 0 and sp <= ep:
@@ -126,38 +111,6 @@ def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern:
 
     return ret
 
-def search_for_pattern(bwt_text : str, suffix_array: list[int], pattern: str):
-
-    n = len(bwt_text)
-
-    sp = 1
-    ep = n-1
-
-    first = sorted(bwt_text)
-    rank_table = get_rank_table(''.join(first))
-    k = len(pattern) - 1
-
-    count_table = get_count_table(bwt_text)
-
-    while k >= 0 and sp <= ep:
-
-        char = pattern[k]
-        char_idx = get_character_idx(char)
-        sp = rank_table[char_idx] + count_table[sp - 1][char_idx]
-        ep = rank_table[char_idx] + count_table[ep][char_idx] - 1
-
-        if sp > ep:
-            return []
-
-
-        k -= 1
-
-    return suffix_array[sp:ep+1]
-
-# text = "bbebabababebebababab$"
-# pattern = "be##ba#"
-# suffix_array = compute_suffix_array(text, len(text))
-# bwt_text = ''.join(get_last_character(suffix_array,text))
 
 
 def run_test(txt, pat, expected):
