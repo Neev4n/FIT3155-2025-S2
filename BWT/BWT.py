@@ -8,6 +8,11 @@ def compute_suffix_array(input_text, len_text):
     # Returns the computed suffix array
     return suffix_arr
 
+
+"""
+
+
+"""
 def get_last_character(suffix_array: list[int], input_text: str):
 
     lst = []

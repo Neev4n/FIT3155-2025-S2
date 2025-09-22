@@ -1,63 +1,174 @@
-def compute_suffix_array(input_text, len_text):
-    # Array of structures to store rotations and their indexes
-    suff = [(i, input_text[i:]) for i in range(len_text)]
-    # Sorts rotations using comparison function defined above
-    suff.sort(key=lambda x: x[1])
-    # Stores the indexes of sorted rotations
-    suffix_arr = [i for i, _ in suff]
-    # Returns the computed suffix array
+ASCII_START = 37
+ASCII_END = 126
+ENDING_CHAR = "!"
+
+def compute_suffix_array(input_text):
+    """
+        Function description: This function produces a suffix array which is a sorted array of integers that represent
+        the starting positions of all suffixes of a given string in lexicographical
+
+        Input:
+            input_text : input text to compute suffix array
+
+        Time complexity: O(S) where S is the length of the string
+
+        Time complexity analysis : Given S is the length of the string,
+
+            creating temp array is O(S)
+            sorting temp array lexicographically is O(S) ASSUMING we use ukkonen's algorithm to produce the suffix array
+            creating suffix array is O(S)
+
+            O(S)
+
+        Space complexity: O(S) given S is the length of the string
+
+        Space complexity analysis:
+
+            O(S) for input string
+            O(S) for creating temp array
+            O(S) for creating final suffix array to be returned
+
+    """
+
+    # contains index and suffix from that index
+    temp = [(i, input[i:]) for i in range(len(input_text))]  # O(S) where S is the length of the input string
+
+    temp.sort(key=lambda x: x[1])  # O(S) ASSUMING ukkonen's algorithm is used here instead
+
+    suffix_arr = [i for i, _ in temp]   # O(S)
+
     return suffix_arr
 
-def get_last_character(suffix_array: list[int], input_text: str):
+def get_bwt_text(suffix_array: list[int], input_text: str):
+    """
+        Function description: This function produces a bwt string that is computed for every character in the suffix array
+        by choosing the left adjacent character in the input string
 
-    lst = []
+        Input:
+            suffix_array : suffix array of the input text
+            input_text : text used to produce bwt text
+
+        Time complexity: O(S) where S is the length of the true
+
+        Time complexity analysis : Given S is the length of the string,
+
+            bwt text is O(S)
+
+            O(S)
+
+        Space complexity: O(S) given S is the length of the string
+
+        Space complexity analysis:
+
+            O(S) for input string
+            O(S) for input suffix array
+            O(S) for bwt text returned
+
+    """
+
+    bwt_text = ""
+
+    # O(S) where S is the length of the string
     for index in suffix_array:
-        lst.append(input_text[index-1])
 
-    return lst
+        # identical to suffix array string but shifted left by one
+        bwt_text += input_text[index - 1]   # O(1)
+
+    return bwt_text
 
 def get_rank_table(input_text: str):
+    """
+        Function description: This function produces a rank table which contains the index value of the first occurrence
+        of a given character in the input text
 
-    table = [-1] * 27
+        Input:
+            input_text : text used to rank table
 
-    for i in range(1,len(input_text)):
+        Time complexity: O(S + A) where S is the length of the string and A is the length of the alphabet
 
-        idx = ord(input_text[i]) - ord('a')
+        Time complexity analysis : Given S is the length of the string and A is the length of the alphabet,
 
-        if table[idx] == -1:
-            table[idx] = i
+             initializing the rank table is O(A)
+             computing the values for the rank table is O(S)
 
+             O(S + A)
+
+        Space complexity: O(S + A) given S is the length of the string and A is the length of the alphabet
+
+        Space complexity analysis:
+
+            O(S) for input string
+            O(A) for the rank table
+
+            O(S + A)
+
+        Auxiliary Space complexity : O(A)
+    """
+
+    table = [-1] * (ASCII_END - ASCII_START + 1) # O(A) where A is the length of the alphabet
+
+    # O(S) where S is the length of the string
+    for i in range(1, len(input_text)):
+
+        char_idx = ord(input_text[i]) - ASCII_START
+
+        # if character index has not already been updated then update else do not change
+        if table[char_idx] == -1:
+            table[char_idx] = i
+
+    # initialize last index for the edge case that sp = 0
     table[-1] = 0
 
     return table
 
-def get_character_idx(char: str):
-    char_idx = ord(char) - ord('a')
 
-    return char_idx if char != "$" else -1
+def get_character_idx(input_char: str):
+    """
+        Function description: This function returns the relevant index of a given character
+
+        Input:
+            input_char : input character to compute character index
+
+        Time complexity: O(1)
+
+        Time complexity analysis :
+
+             calculating char_idx using ord() is O(1)
+             checking if character is the ENDING_CHAR is O(1)
+
+        Space complexity: O(1)
+
+        Space complexity analysis:
+
+            O(1) for input character
+            O(1) for storing char_idx
+    """
+
+    char_idx = ord(input_char) - ASCII_START
+
+    return char_idx if input_char != ENDING_CHAR else -1
+
 
 def get_count_table(input_text: str):
-
     n = len(input_text)
     arr = [None] * (n + 1)
-    temp = [0] * 27
+    temp = [0] * (ASCII_END - ASCII_START + 1)
 
     for i in range(len(input_text)):
-
         char_idx = get_character_idx(input_text[i])
         temp[char_idx] = temp[char_idx] + 1
         arr[i] = temp[:]
 
-    arr[-1] = [0] * 27
+    arr[-1] = [0] * (ASCII_END - ASCII_START + 1)
 
     return arr
 
-def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern: str):
 
+def search_for_pattern_special(bwt_text: str, suffix_array: list[int], pattern: str):
     n = len(bwt_text)
 
     sp = 0
-    ep = n-1
+    ep = n - 1
 
     first = sorted(bwt_text)
     rank_table = get_rank_table(''.join(first))
@@ -68,7 +179,7 @@ def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern:
     res = [False for _ in range(n)]
     ret = []
 
-    def search_for_pattern_aux(k: int, sp: int, ep: int, temp_char = ""):
+    def search_for_pattern_aux(k: int, sp: int, ep: int, temp_char=""):
 
         stop_add = False
 
@@ -82,7 +193,7 @@ def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern:
 
             if char == "#":
                 for idx in range(sp, ep + 1):
-                    if bwt_text[idx] != "$":
+                    if bwt_text[idx] != ENDING_CHAR:
                         search_for_pattern_aux(k, sp, ep, bwt_text[idx])
 
                 stop_add = True
@@ -100,23 +211,22 @@ def search_for_pattern_special(bwt_text : str, suffix_array: list[int], pattern:
         if stop_add:
             return
 
-        for i in range(sp, ep+1):
+        for i in range(sp, ep + 1):
             res[suffix_array[i]] = True
 
     search_for_pattern_aux(k, sp, ep)
 
     for i in range(n):
         if res[i]:
-            ret.append(i+1)
+            ret.append(i + 1)
 
     return ret
 
 
-
 def run_test(txt, pat, expected):
-    txt = txt + "$"
-    suffix_array = compute_suffix_array(txt, len(txt))
-    bwt_text = ''.join(get_last_character(suffix_array, txt))
+    txt = txt + ENDING_CHAR
+    suffix_array = compute_suffix_array(txt)
+    bwt_text = get_bwt_text(suffix_array, txt)
 
     res = search_for_pattern_special(bwt_text, suffix_array, pat)
     if res == expected:
