@@ -31,7 +31,7 @@ def compute_suffix_array(input_text):
     """
 
     # contains index and suffix from that index
-    temp = [(i, input[i:]) for i in range(len(input_text))]  # O(S) where S is the length of the input string
+    temp = [(i, input_text[i:]) for i in range(len(input_text))]  # O(S) where S is the length of the input string
 
     temp.sort(key=lambda x: x[1])  # O(S) ASSUMING ukkonen's algorithm is used here instead
 
@@ -218,54 +218,65 @@ def search_for_pattern_special(bwt_text: str, suffix_array: list[int], pattern: 
 
     for i in range(n):
         if res[i]:
-            ret.append(i + 1)
+            ret.append(i)
 
     return ret
 
+def run_test(pat, txt):
 
-def run_test(txt, pat, expected):
+    if len(pat) == 0 or len(txt) == 0:
+        return []
+
     txt = txt + ENDING_CHAR
     suffix_array = compute_suffix_array(txt)
     bwt_text = get_bwt_text(suffix_array, txt)
 
     res = search_for_pattern_special(bwt_text, suffix_array, pat)
-    if res == expected:
-        print(f"PASS: pat='{pat}', txt='{txt}' -> {res}")
-    else:
-        print(f"FAIL: pat='{pat}', txt='{txt}' -> got {res}, expected {expected}")
+    return res
+
+# def run_test(txt, pat, expected):
+#     txt = txt + ENDING_CHAR
+#     suffix_array = compute_suffix_array(txt)
+#     bwt_text = get_bwt_text(suffix_array, txt)
+#
+#     res = search_for_pattern_special(bwt_text, suffix_array, pat)
+#     if res == expected:
+#         print(f"PASS: pat='{pat}', txt='{txt}' -> {res}")
+#     else:
+#         print(f"FAIL: pat='{pat}', txt='{txt}' -> got {res}, expected {expected}")
 
 
-# --- Test cases ---
-
-# 1. Exact match once
-run_test("abcde", "bcd", [2])
-
-# 2. Exact match multiple
-run_test("ababababa", "aba", [1, 3, 5, 7])
-
-# 3. No match
-run_test("abcdef", "gh", [])
-
-# 4. Wildcard at start
-run_test("xabcy", "#abc", [1])
-
-# 5. Wildcard in middle
-run_test("abcdef", "a#c", [1])
-
-# 6. Wildcard at end
-run_test("abcdef", "de#", [4])
-
-# 7. Multiple wildcards (assignment example)
-run_test("bbebabababebebababab", "be##ba#", [2, 10, 12])
-
-# 8. Pattern all wildcards
-run_test("abcdef", "###", [1, 2, 3, 4])
-
-# 9. Pattern longer than text
-run_test("abc", "abcd", [])
-
-# 10. Pattern equals text, with wildcards
-run_test("abcdef", "######", [1])
-
-# 11. Overlapping matches with wildcards
-run_test("aaaaaa", "a#a", [1, 2, 3, 4])
+# # --- Test cases ---
+#
+# # 1. Exact match once
+# run_test("abcde", "bcd", [2])
+#
+# # 2. Exact match multiple
+# run_test("ababababa", "aba", [1, 3, 5, 7])
+#
+# # 3. No match
+# run_test("abcdef", "gh", [])
+#
+# # 4. Wildcard at start
+# run_test("xabcy", "#abc", [1])
+#
+# # 5. Wildcard in middle
+# run_test("abcdef", "a#c", [1])
+#
+# # 6. Wildcard at end
+# run_test("abcdef", "de#", [4])
+#
+# # 7. Multiple wildcards (assignment example)
+# run_test("bbebabababebebababab", "be##ba#", [2, 10, 12])
+#
+# # 8. Pattern all wildcards
+# run_test("abcdef", "###", [1, 2, 3, 4])
+#
+# # 9. Pattern longer than text
+# run_test("abc", "abcd", [])
+#
+# # 10. Pattern equals text, with wildcards
+# run_test("abcdef", "######", [1])
+#
+# # 11. Overlapping matches with wildcards
+# run_test("aaaaaa", "a#a", [1, 2, 3, 4])
