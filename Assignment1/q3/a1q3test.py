@@ -19,15 +19,6 @@ def compute_suffix_array(input_text):
             creating suffix array is O(S)
 
             O(S)
-
-        Space complexity: O(S) given S is the length of the string
-
-        Space complexity analysis:
-
-            O(S) for input string
-            O(S) for creating temp array
-            O(S) for creating final suffix array to be returned
-
     """
 
     # contains index and suffix from that index
@@ -55,15 +46,6 @@ def get_bwt_text(suffix_array: list[int], input_text: str):
             bwt text is O(S)
 
             O(S)
-
-        Space complexity: O(S) given S is the length of the string
-
-        Space complexity analysis:
-
-            O(S) for input string
-            O(S) for input suffix array
-            O(S) for bwt text returned
-
     """
 
     bwt_text = ""
@@ -92,17 +74,6 @@ def get_rank_table(input_text: str):
              computing the values for the rank table is O(S)
 
              O(S + A)
-
-        Space complexity: O(S + A) given S is the length of the string and A is the length of the alphabet
-
-        Space complexity analysis:
-
-            O(S) for input string
-            O(A) for the rank table
-
-            O(S + A)
-
-        Auxiliary Space complexity : O(A)
     """
 
     table = [-1] * (ASCII_END - ASCII_START + 1) # O(A) where A is the length of the alphabet
@@ -135,87 +106,169 @@ def get_character_idx(input_char: str):
 
              calculating char_idx using ord() is O(1)
              checking if character is the ENDING_CHAR is O(1)
-
-        Space complexity: O(1)
-
-        Space complexity analysis:
-
-            O(1) for input character
-            O(1) for storing char_idx
     """
 
-    char_idx = ord(input_char) - ASCII_START
+    char_idx = ord(input_char) - ASCII_START # O(1) get char index
 
-    return char_idx if input_char != ENDING_CHAR else -1
+    return char_idx if input_char != ENDING_CHAR else -1 # O(1) return and check if char is ENDING_CHAR
 
 
 def get_count_table(input_text: str):
+    """
+        Function description: This function produces a count table which contains the number of occurrences of a character before a given index
+
+        Input:
+            input_text : input text to compute count table
+
+        Time complexity: O(S * A) where S is the length of the string and A is the alphabet size
+
+        Time complexity analysis :
+
+             generating return array is O(S)
+             generating temp array is O(A)
+             populating return array is O(S * A)
+    """
+
     n = len(input_text)
-    arr = [None] * (n + 1)
-    temp = [0] * (ASCII_END - ASCII_START + 1)
+    arr = [None] * (n + 1) # O(S) where S is the length of the string
+    temp = [0] * (ASCII_END - ASCII_START + 1)  # O(A) where A is the alphabet size
 
+    # O(S)
+    # loop through text and for every character update temp position and update array for current index
     for i in range(len(input_text)):
-        char_idx = get_character_idx(input_text[i])
-        temp[char_idx] = temp[char_idx] + 1
-        arr[i] = temp[:]
 
-    arr[-1] = [0] * (ASCII_END - ASCII_START + 1)
+        char_idx = get_character_idx(input_text[i]) # O(1)
+        temp[char_idx] = temp[char_idx] + 1 # O(1)
+        arr[i] = temp[:] #O(A)
 
-    return arr
+    arr[-1] = [0] * (ASCII_END - ASCII_START + 1)   # O(1)
 
+    return arr # O(1)
 
 def search_for_pattern_special(bwt_text: str, suffix_array: list[int], pattern: str):
-    n = len(bwt_text)
+    """
+        Function description: This functions returns a list of indices where the pattern occurs in a given text and
+        accounts for wildcard characters (#) which can be substituted for any character
 
+        Input:
+            bwt_text: the burrow wheeler transform text used for pattern matching
+            suffix_array : the suffix array of the original string
+            pattern : the pattern to be matched
+
+        Time complexity: O(S^W) where S is the length of the string (pattern),W is the number of wildcards in the pattern,
+        A is the alphabet size
+
+        Time complexity analysis :
+
+             to sort the bwt text and use it for pattern matching is O(S * log(S))
+             producing the rank table is O(S + A)
+             producing the count table is O(S * A)
+             finally to run the recursive pattern matching using search_for_pattern_aux is O(S^W)
+
+             O(S^W + (S * log(S)))
+
+    """
+
+    # Initialize all starting values
+    n = len(bwt_text)
     sp = 0
     ep = n - 1
 
-    first = sorted(bwt_text)
-    rank_table = get_rank_table(''.join(first))
+    first = sorted(bwt_text) # O(S * log(S)) where S is the length of the string
+    rank_table = get_rank_table(''.join(first)) # O(S + A) where S is the length of the string and A is the alphabet size
     k = len(pattern) - 1
 
-    count_table = get_count_table(bwt_text)
+    count_table = get_count_table(bwt_text) # O(S * A)
 
-    res = [False for _ in range(n)]
+    res = [False for _ in range(n)] # O(S)
     ret = []
 
     def search_for_pattern_aux(k: int, sp: int, ep: int, temp_char=""):
+        """
+            Function description: This function recursively moves through the pattern until the pattern is completed found
+            in the text being searched in or breaks. If the pattern is found all the relevant indices in the suffix array
+            is turned True in the res array to the return array with all the indices
 
+            Input:
+                k: the index in the pattern that is character being checked
+                sp : the starting point index in the bwt text
+                ep : the ending point index in the bwt text
+                temp_char : if a wildcard is met the temp_char variable will substitute the wildcard
+
+            Time complexity: O(S^W) where S is the length of the string (pattern) and W is the number of wildcards in the pattern
+
+            Time complexity analysis :
+
+                 to loop through the pattern is O(S)
+                 if a wildcard is met then we must create a branch for each character from sp to ep which is O(S)
+                 the number of branches created could be the length of the string and the range sp to ep is worst case the length of S
+                 thus the time complexity is exponential for searching the pattern
+
+            Space complexity: O(1)
+
+            Space complexity analysis:
+
+                O(1) for input index k
+                O(1) for input sp
+                O(1) for input ep
+                O(1) for temp_char
+                No additional arrays or other data structures formed
+        """
+
+        # this boolean becomes True when a wild card is found in the current branch
+        # if stop_add is true then disregard adding the indices of current branch but still add child branch indices
         stop_add = False
 
+        # only run if there is a pattern left (k >= 0) or there are more characters to match (sp < ep)
         while k >= 0 and sp <= ep:
 
+            # temp char is true if a wild card was found in the previous iteration
+
             if temp_char:
+
+                # if last char was a wild chard then update it to temp char sent in branch
                 char = temp_char
+                # make temp_char False again so char does not get replaced with empty string
                 temp_char = False
             else:
+
+                # if we haven't met a wild card then make char the next character
                 char = pattern[k]
 
+            # if the next char we found is wild card then search for pattern for all characters from sp to ep
             if char == "#":
                 for idx in range(sp, ep + 1):
+
+                    # only run if the character is not the ENDING_CHAR
                     if bwt_text[idx] != ENDING_CHAR:
                         search_for_pattern_aux(k, sp, ep, bwt_text[idx])
 
+                # make stop add true to disregard indices of current branch
                 stop_add = True
+                # this branch is no longer valid so break from loop
                 break
 
-            char_idx = get_character_idx(char)
-            sp = rank_table[char_idx] + count_table[sp - 1][char_idx]
-            ep = rank_table[char_idx] + count_table[ep][char_idx] - 1
+
+            char_idx = get_character_idx(char) # O(1)
+            sp = rank_table[char_idx] + count_table[sp - 1][char_idx]   # O(1)
+            ep = rank_table[char_idx] + count_table[ep][char_idx] - 1   #O (1)
 
             if sp > ep:
                 break
 
             k -= 1
 
+        # leave current branch if stop_add is True
         if stop_add:
             return
 
+        # else convert indices into true to add to returning list after
         for i in range(sp, ep + 1):
             res[suffix_array[i]] = True
 
     search_for_pattern_aux(k, sp, ep)
 
+    # add pattern matched indices into return list and return
     for i in range(n):
         if res[i]:
             ret.append(i)
