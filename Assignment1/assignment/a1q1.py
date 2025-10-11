@@ -1,3 +1,5 @@
+import sys
+
 ASCII_START = 37
 ASCII_END = 126
 ENDING_CHAR = "!"
@@ -170,59 +172,36 @@ def pattern_match_wildcard(pattern: str, text: str):
     res = [i + 1 for i in range(max_start) if count[i] == num_components]   #O(T)
     return res
 
-    # print(components)
-    # print(component_indices)
+# this function reads a file and return its content
+def read_file(file_path: str) -> str:
+    f = open(file_path, 'r')
 
 
-# if __name__ == '__main__':
-#     txt = "bbebabababebebababab"
-#     pat = "be##ba#"
-#     print(pattern_match_wildcard(txt, pat))
+    line = f.readlines()
+    f.close()
+    return line
 
-# def run_test(txt, pat, expected):
-#
-#
-#     res = pattern_match_wildcard(txt, pat)
-#     if res == expected:
-#         print(f"PASS: pat='{pat}', txt='{txt}' -> {res}")
-#     else:
-#         print(f"FAIL: pat='{pat}', txt='{txt}' -> got {res}, expected {expected}")
-#
-#
-# # --- Test cases ---
-#
-# # 1. Exact match once
-# run_test("abcde", "bcd", [2])
-#
-# # 2. Exact match multiple
-# run_test("ababababa", "aba", [1, 3, 5, 7])
-#
-# # 3. No match
-# run_test("abcdef", "gh", [])
-#
-# # 4. Wildcard at start
-# run_test("xabcy", "#abc", [1])
-#
-# # 5. Wildcard in middle
-# run_test("abcdef", "a#c", [1])
-#
-# # 6. Wildcard at end
-# run_test("abcdef", "de#", [4])
-#
-# # 7. Multiple wildcards (assignment example)
-# run_test("bbebabababebebababab", "be##ba#", [2, 10, 12])
-#
-# # 8. Pattern all wildcards
-# run_test("abcdef", "###", [1, 2, 3, 4])
-#
-# # 9. Pattern longer than text
-# run_test("abc", "abcd", [])
-#
-# # 10. Pattern equals text, with wildcards
-# run_test("abcdef", "######", [1])
-#
-# # 11. Overlapping matches with wildcards
-# run_test("aaaaaa", "a#a", [1, 2, 3, 4])
+def write_file(output_path: str, result: list[int]):
+    with open(output_path, "w") as file:
+        file.write("\n".join(map(str, result)))
 
 
+if __name__ == '__main__':
+    print("Number of arguments passed : ", len(sys.argv))
+    # this is the program name
+    print("Oth argument : ", sys.argv[0])
+    # first argument/file path
+    # second argument/file path
+    print("First argument : ", sys.argv[1])
+    print("Second argument : ", sys.argv[2])
 
+    OUTPUT_FILE_NAME = "output_a1q1.txt"
+
+    txt = read_file(sys.argv[1])
+    pat = read_file(sys.argv[2])
+
+    res = pattern_match_wildcard("".join(pat), "".join(txt))
+    write_file(OUTPUT_FILE_NAME, res)
+
+    print("\nContent of first file : ", read_file(sys.argv[1]))
+    print("\nContent of second file : ", read_file(sys.argv[2]))

@@ -1,3 +1,5 @@
+import sys
+
 ASCII_START = 37
 ASCII_END = 126
 ENDING_CHAR = "!"
@@ -145,20 +147,21 @@ def get_count_table(input_text: str):
 
     return arr # O(1)
 
-def search_for_pattern_special(bwt_text: str, first: str, suffix_array: list[int], pattern: str):
+def search_for_pattern_special(pattern: str, text: str):
     """
         Function description: This functions returns a list of indices where the pattern occurs in a given text and
         accounts for wildcard characters (#) which can be substituted for any character
 
         Input:
-            bwt_text: the burrow wheeler transform text used for pattern matching
-            suffix_array : the suffix array of the original string
+            text : input text for pattern to be matched with
             pattern : the pattern to be matched
 
         Time complexity: O(P^W) where P is the length of the pattern,W is the number of wildcards in the pattern,
         A is the alphabet size
 
         Time complexity analysis :
+
+             producing suffix array, bwt text and first is O(T) - ASSUMING Ukkonen's algorithm for suffix arrays is used
              producing the rank table is O(T + A)
              producing the count table is O(T * A)
              finally to run the recursive pattern matching using search_for_pattern_aux is O(P^W)
@@ -178,6 +181,18 @@ def search_for_pattern_special(bwt_text: str, first: str, suffix_array: list[int
             O((T * A) + P)
 
     """
+
+    # early edge case exit
+    if len(pattern) == 0 or len(text) == 0:
+        return []
+
+    text = text + ENDING_CHAR
+    suffix_array = compute_suffix_array(text)
+    bwt_text = get_bwt_text(suffix_array, text)
+    first = ""
+
+    for ind in suffix_array:
+        first += text[ind]
 
     # Initialize all starting values
     n = len(bwt_text)
@@ -278,71 +293,40 @@ def search_for_pattern_special(bwt_text: str, first: str, suffix_array: list[int
     search_for_pattern_aux(k, sp, ep)
 
     # add pattern matched indices into return list and return
-    ret = [i for i in range(n) if res[i]]
+    ret = [i + 1 for i in range(n) if res[i]]
 
     return ret
 
-def run_test(pat, txt):
-
-    if len(pat) == 0 or len(txt) == 0:
-        return []
-
-    txt = txt + ENDING_CHAR
-    suffix_array = compute_suffix_array(txt)
-    bwt_text = get_bwt_text(suffix_array, txt)
-    first = ""
-    for ind in suffix_array:
-        first += txt[ind]
-
-    res = search_for_pattern_special(bwt_text, first, suffix_array, pat)
-    return res
-
-# def run_test(txt, pat, expected):
-#     txt = txt + ENDING_CHAR
-#     suffix_array = compute_suffix_array(txt)
-#     bwt_text = get_bwt_text(suffix_array, txt)
-#     first = ""
-#     for ind in suffix_array:
-#         first += txt[ind]
-#
-#     res = search_for_pattern_special(bwt_text, first, suffix_array, pat)
-#     if res == expected:
-#         print(f"PASS: pat='{pat}', txt='{txt}' -> {res}")
-#     else:
-#         print(f"FAIL: pat='{pat}', txt='{txt}' -> got {res}, expected {expected}")
+# this function reads a file and return its content
+def read_file(file_path: str) -> str:
+    f = open(file_path, 'r')
 
 
-# --- Test cases ---
+    line = f.readlines()
+    f.close()
+    return line
 
-# # 1. Exact match once
-# run_test("abcde", "bcd", [2])
-#
-# # 2. Exact match multiple
-# run_test("ababababa", "aba", [1, 3, 5, 7])
-#
-# # 3. No match
-# run_test("abcdef", "gh", [])
-#
-# # 4. Wildcard at start
-# run_test("xabcy", "#abc", [1])
-#
-# # 5. Wildcard in middle
-# run_test("abcdef", "a#c", [1])
-#
-# # 6. Wildcard at end
-# run_test("abcdef", "de#", [4])
-#
-# # 7. Multiple wildcards (assignment example)
-# run_test("bbebabababebebababab", "be##ba#", [2, 10, 12])
-#
-# # 8. Pattern all wildcards
-# run_test("abcdef", "###", [1, 2, 3, 4])
-#
-# # 9. Pattern longer than text
-# run_test("abc", "abcd", [])
-#
-# # 10. Pattern equals text, with wildcards
-# run_test("abcdef", "######", [1])
-#
-# # 11. Overlapping matches with wildcards
-# run_test("aaaaaa", "a#a", [1, 2, 3, 4])
+def write_file(output_path: str, result: list[int]):
+    with open(output_path, "w") as file:
+        file.write("\n".join(map(str, result)))
+
+
+if __name__ == '__main__':
+    print("Number of arguments passed : ", len(sys.argv))
+    # this is the program name
+    print("Oth argument : ", sys.argv[0])
+    # first argument/file path
+    # second argument/file path
+    print("First argument : ", sys.argv[1])
+    print("Second argument : ", sys.argv[2])
+
+    OUTPUT_FILE_NAME = "output_a1q3.txt"
+
+    txt = read_file(sys.argv[1])
+    pat = read_file(sys.argv[2])
+
+    res = search_for_pattern_special("".join(pat), "".join(txt))
+    write_file(OUTPUT_FILE_NAME, res)
+
+    print("\nContent of first file : ", read_file(sys.argv[1]))
+    print("\nContent of second file : ", read_file(sys.argv[2]))

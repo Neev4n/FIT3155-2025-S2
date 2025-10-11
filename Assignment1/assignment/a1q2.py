@@ -1,3 +1,5 @@
+import sys
+
 ASCII_START = 37
 ASCII_END = 126
 ENDING_CHAR = "!"
@@ -157,7 +159,7 @@ def create_bad_character_table(pattern: str) -> list[list[int]]:
     """
     assci_range = (ASCII_END - ASCII_START)
     p = len(pattern)
-    arr = [[-1] * assci_range] * (p+1)
+    arr = [[-1] * assci_range for _ in range(p+1)]
     temp = [-1] * assci_range
 
     for i in range(len(pattern)-1,-1,-1):
@@ -166,7 +168,7 @@ def create_bad_character_table(pattern: str) -> list[list[int]]:
 
     return arr
 
-def boyer_moore_algorithm(text: str, pattern: str):
+def boyer_moore_algorithm(pattern: str, text: str):
 
     if not len(pattern) or not len(text):
         return []
@@ -180,7 +182,6 @@ def boyer_moore_algorithm(text: str, pattern: str):
     k = t - p
     res = []
 
-
     while k >= 0:
         k1 = 0
 
@@ -192,16 +193,19 @@ def boyer_moore_algorithm(text: str, pattern: str):
         if k1 == p:
 
             # append index into res
-            res.append(k)
+            res.append(k+1)
 
             # next best shift is the previous matched-suffix shift
             good_shift = p - matched_suffix_table[k1 - 1]
-            k = k - good_shift
+            k = k - max(1,good_shift)
             continue
 
         # get the bad character shift
         bad_char_val = bad_char_table[k1][ord(text[k+k1]) - ASCII_START]
-        bad_char_shift = p if bad_char_val == -1 else max(1, bad_char_val - k1)
+        if bad_char_val == -1:
+            bad_char_shift = 1
+        else:
+            bad_char_shift = max(1, k1 - bad_char_val)
 
         # get the good prefix shift
         good_prefix_val = good_prefix_table[k1-1]
@@ -213,55 +217,37 @@ def boyer_moore_algorithm(text: str, pattern: str):
 
     return res
 
-def print_text_and_indices(text: str):
-
-    char_str = "  ".join(text)
-    print(char_str)
-
-    print_arr(list(range(len(text))), "character indices:")
-
-def print_arr(arr: list[int], desc: str):
-
-    index_str = "  ".join(str(num) for num in arr)
-    print(desc)
-    print(index_str)
+# this function reads a file and return its content
+def read_file(file_path: str) -> str:
+    f = open(file_path, 'r')
 
 
-# txt = "aacababacabbcaacababacabbcabcabcabcabcacababbabb"
-# pat = "acababacab"
-# print_text_and_indices(pat)
-#
-# print(boyer_moore_algorithm(txt, pat))
+    line = f.readlines()
+    f.close()
+    return line
 
-def run_tests():
-    cases = [
-        ("abcde", "bcd", [1]),
-        ("abababab", "ab", [0,2,4,6]),
-        ("aaaaa", "aaa", [0,1,2]),
-        ("abcdef", "gh", []),
-        ("abcdef", "", []),
-        ("", "abc", []),
-        ("abc", "abcd", []),
-        ("abcde", "abcde", [0]),
-        ("aaaaaaaaaa", "aa", [0,1,2,3,4,5,6,7,8]),
-        ("aaaaab", "aaab", [2]),
-        ("abc$%abc$%abc", "$%", [3,8]),
-        ("a"*10000, "b", []),
-        ("abc"*1000, "abc", list(range(0,3000,3))),
-        ("xxxxxxabcdef", "abcdef", [6]),
-        ("abcdefxxxxx", "abc", [0]),
-        ("abcdabcd", "cdab", [2]),
-    ]
-
-    for text, pat, expected in cases:
-        result = boyer_moore_algorithm(text, pat)
-        result.sort()
-        assert result == expected, f"FAILED: {text}, {pat}, got {result}, expected {expected}"
-    print("All test cases passed!")
-
-run_tests()
+def write_file(output_path: str, result: list[int]):
+    with open(output_path, "w") as file:
+        file.write("\n".join(map(str, result)))
 
 
-# print(create_matched_suffix_table(pat))
+if __name__ == '__main__':
+    print("Number of arguments passed : ", len(sys.argv))
+    # this is the program name
+    print("Oth argument : ", sys.argv[0])
+    # first argument/file path
+    # second argument/file path
+    print("First argument : ", sys.argv[1])
+    print("Second argument : ", sys.argv[2])
 
-# print(boyer_moore_algorithm(txt, pat))
+    OUTPUT_FILE_NAME = "output_a1q2.txt"
+
+    txt = read_file(sys.argv[1])
+    pat = read_file(sys.argv[2])
+
+
+    res = boyer_moore_algorithm("".join(pat), "".join(txt))
+    write_file(OUTPUT_FILE_NAME, res)
+
+    print("\nContent of first file : ", read_file(sys.argv[1]))
+    print("\nContent of second file : ", read_file(sys.argv[2]))
