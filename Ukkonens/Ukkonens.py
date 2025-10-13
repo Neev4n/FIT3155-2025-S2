@@ -9,41 +9,30 @@ ENDING_CHAR = "!"
 input_string = "xyzxaxyz!"
 node_number = 0
 
-class SuffixTreeLeaf():
-
-    def __init__(self, start : int, end: int):
-        global node_number
-        node_number += 1
-
-        self.node_val = node_number
-        self.start = start
-        self. end = end
-
-    def __str__(self):
-        return f"Node (Leaf) {self.node_val}: {input_string[self.start:self.end + 1]}"
-
 
 class SuffixTreeNode():
 
-    def __init__(self, start: int, end: int):
+    def __init__(self, start: int, end: int, is_leaf : bool):
         global node_number
         node_number += 1
 
+        self.is_leaf = is_leaf
         self.node_val = node_number
-        self.children : list[SuffixTreeNode | SuffixTreeLeaf | None] = [None] * (ASCII_END - ASCII_START + 1)
+        self.children : list[SuffixTreeNode | None] = [None] * (ASCII_END - ASCII_START + 1)
         self.start = start
         self.end = end
 
     def __str__(self):
         children_str = ", ".join(str(node) for node in self.children if node is not None)
-        return f"Node (Internal) {self.node_val}: {input_string[self.start:self.end + 1]}, children: [{children_str}]"
+        type_str = "Leaf" if self.is_leaf else "Internal"
+        return f"Node ({type_str}) {self.node_val}: {input_string[self.start:self.end + 1]}, children: [{children_str}]"
 
 
 class SuffixTree():
 
     def __init__(self, input_str : string):
         self.str = input_str
-        self.root = SuffixTreeNode(-1,-1)
+        self.root = SuffixTreeNode(-1,-1, False)
 
     def _get_char_index(self, input_char: str):
 
@@ -57,11 +46,12 @@ class SuffixTree():
         active_node = self.root
         active_edge = 0
         active_length = 0
-        end = 0
+        g_end = 0
 
         # loop through phases
         for i in range(n):
-
+            remaining += 1
+            g_end += 1
             j = 0
 
             # loop through extensions
@@ -76,7 +66,7 @@ class SuffixTree():
                 char_ind = self._get_char_index(char)
                 jump = 0
 
-                traversing_node : SuffixTreeNode | SuffixTreeLeaf = curr.children[char_ind]
+                traversing_node : SuffixTreeNode = curr.children[char_ind]
 
                 if traversing_node:
 
@@ -103,10 +93,10 @@ class SuffixTree():
                                 char = self.str[j+k]
                                 char_ind = self._get_char_index(char)
 
-                                traversing_node: SuffixTreeNode | SuffixTreeLeaf = curr.children[char_ind]
+                                traversing_node: SuffixTreeNode = curr.children[char_ind]
 
                                 if not traversing_node:
-                                    new_node = SuffixTreeLeaf(j+k, j+k)
+                                    new_node = SuffixTreeNode(j+k, j+k, True)
                                     curr.children[char_ind] = new_node
 
                                 start = traversing_node.start
@@ -128,11 +118,11 @@ class SuffixTree():
                             traversing_node_char_ind = self._get_char_index(self.str[start + k])
                             new_node_char_ind = self._get_char_index(self.str[k+j+jump])
 
-                            middle_node = SuffixTreeNode(start, start + k - 1)
+                            middle_node = SuffixTreeNode(start, start + k - 1, False)
 
                             traversing_node.start = start + k
 
-                            new_node = SuffixTreeLeaf(k+j+jump, k+j+jump)
+                            new_node = SuffixTreeNode(k+j+jump, k+j+jump, True)
 
                             curr.children[char_ind] = middle_node
 
@@ -143,7 +133,7 @@ class SuffixTree():
 
                 # rule 2
                 else:
-                    new_node = SuffixTreeLeaf(j, i)
+                    new_node = SuffixTreeNode(j, i, True)
                     curr.children[char_ind] = new_node
 
                 j += 1
