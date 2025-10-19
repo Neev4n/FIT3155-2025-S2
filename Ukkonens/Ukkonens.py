@@ -8,7 +8,7 @@ ASCII_END = 126
 ASCII_RANGE = (ASCII_END - ASCII_START + 1) + 1
 ENDING_CHAR = "$"
 
-input_string = "aabaaab$"
+input_string = "aabaaaba$"
 #aabaaabaaa
 node_number = 0
 
@@ -70,8 +70,6 @@ class SuffixTree:
         active_node = self.root
         active_edge = -1
         active_length = 0
-        prev_act_len = 0
-        prev_act_node = None
 
 
         # loop through phases
@@ -136,6 +134,10 @@ class SuffixTree:
                     if char_to_check == next_char:
                         active_edge = edge.start
                         active_length += 1
+
+                        if prev_internal_node:
+                            prev_internal_node.add_suffix_link(active_node)
+
                         break
 
                     # rule 2 b - insert internal node
@@ -157,6 +159,7 @@ class SuffixTree:
                         if prev_internal_node:
                             prev_internal_node.add_suffix_link(middle_edge)
 
+
                         prev_internal_node = middle_edge
                         prev_internal_node.add_suffix_link(self.root)
 
@@ -177,8 +180,12 @@ class SuffixTree:
                         active_node.children[self._get_char_index(char_to_check)] = new_node
 
                         remaining -= 1
-                        active_length = prev_act_len
-                        active_node = prev_act_node
+                        # active_length = prev_act_len
+                        # active_node = prev_act_node
+
+                        if prev_internal_node:
+                            prev_internal_node.add_suffix_link(active_node)
+                            prev_internal_node = None
                         # root
                         if active_node.node_val == 1:
                             active_length -= 1
@@ -191,6 +198,10 @@ class SuffixTree:
 
                     active_node.children[self._get_char_index(char_to_check)] = new_node
                     remaining -= 1
+
+                    if prev_internal_node:
+                        prev_internal_node.add_suffix_link(active_node)
+                        prev_internal_node = None
 
     def create_suffix_array(self):
         res = []
@@ -328,7 +339,7 @@ if __name__ == '__main__':
     print(compute_naive_suffix_array(input_string))
 
 
-    #run_suffix_array_tests()
+    run_suffix_array_tests()
 
 
 
